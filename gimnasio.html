@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FitRoutine - Tu plan de ejercicios semanales</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <style>
+    /* Variables para Tema Oscuro (Default) */
+    :root {
+      --bg-primary: #121212;
+      --bg-secondary: #1E1E1E;
+      --bg-tertiary: #2D2D2D;
+      --text-primary: #F3F4F6;
+      --text-secondary: #9CA3AF;
+      --border-color: #374151;
+      --accent-color: #6366F1;
+      --accent-hover: #4F46E5;
+    }
+
+    /* Variables para Tema Claro */
+    body.light-mode {
+      --bg-primary: #F3F4F6;
+      --bg-secondary: #FFFFFF;
+      --bg-tertiary: #E5E7EB;
+      --text-primary: #111827;
+      --text-secondary: #4B5563;
+      --border-color: #D1D5DB;
+      --accent-color: #4F46E5;
+      --accent-hover: #4338CA;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    /* Utility classes mapped to CSS variables for Tailwind compatibility */
+    .bg-card { background-color: var(--bg-secondary); }
+    .bg-input { background-color: var(--bg-tertiary); }
+    .text-main { color: var(--text-primary); }
+    .text-muted { color: var(--text-secondary); }
+    .border-theme { border-color: var(--border-color); }
+
+    .sidebar {
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      transition: transform 0.3s ease;
+    }
+
+    .card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+      background-color: var(--accent-color);
+      color: white;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .exercise-item {
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-tertiary);
+      transition: all 0.2s ease;
+    }
+    
+    .exercise-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+    }
+
+    /* Drag and Drop Styles */
+    .sortable-placeholder {
+      border: 2px dashed var(--accent-color);
+      background-color: rgba(99, 102, 241, 0.1);
+      visibility: visible !important;
+      height: 60px;
+      margin-bottom: 0.5rem;
+      border-radius: 0.5rem;
+    }
+    
+    .dragging {
+      opacity: 0.9;
+      transform: scale(1.02);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 100;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background-color: var(--bg-tertiary);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+    body:not(.light-mode) .toggle-switch::after {
+      transform: translateX(26px);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Header -->
+  <header class="bg-card shadow-md px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center">
+      <button id="sidebar-toggle" class="md:hidden text-muted hover:text-main mr-3">
+        <i class="fas fa-bars text-xl"></i>
+      </button>
+      <h1 class="text-xl font-bold text-main flex items-center">
+        <i class="fas fa-dumbbell text-indigo-500 mr-2"></i>
+        FitRoutine - Tu plan de ejercicios semanales
+      </h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <button id="theme-toggle" class="flex items-center gap-2 text-muted hover:text-main p-2 rounded-lg" aria-label="Toggle theme">
+        <i class="fas fa-sun text-lg" id="theme-icon-light"></i>
+        <i class="fas fa-moon text-lg hidden" id="theme-icon-dark"></i>
+        <div class="toggle-switch hidden sm:block"></div>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex min-h-[calc(100vh-60px)]">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-64 fixed md:relative h-[calc(100vh-60px)] z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+      <nav class="py-4 px-4 h-full flex flex-col">
+        <div class="mb-8">
+          <h2 class="text-xs font-semibold text-muted uppercase tracking-wider mb-4 px-4">Menu</h2>
+          <ul class="space-y-1">
+            <li>
+              <a href="#" class="nav-link active flex items-center px-4 py-3 text-white bg-indigo-600 rounded-lg" data-view="routines">
+                <i class="fas fa-calendar-week mr-3 w-5"></i>
+                <span>Mis rutinas</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-link flex items-center px-4 py-3 text-muted hover:bg-input rounded-lg" data-view="exercises">
+                <i class="fas fa-dumbbell mr-3 w-5"></i>
+                <span>Libreria de ejercicios</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="mt-auto hidden md:block">
+          <div class="bg-input rounded-lg p-4 text-sm">
+            <h3 class="font-medium text-main mb-2 flex items-center"><i class="fas fa-lightbulb text-yellow-400 mr-2"></i> Tips</h3>
+            <p class="text-muted text-xs">La consistencia es clave. Mantente fiel a tu rutina durante al menos 8 semanas para ver resultados significativos.</p>
+          </div>
+        </div>
+      </nav>
+    </aside>
+    
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-6 overflow-y-auto w-full">
+      
+      <!-- Routines View -->
+      <section id="routines-view" class="animate__animated animate__fadeIn">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-main">Plan semanal</h2>
+            <p class="text-muted text-sm">Organiza tus rutinas semanales</p>
+          </div>
+          <button id="create-routine-btn" class="btn-primary px-4 py-2 rounded-lg shadow-md w-full sm:w-auto">
+            <i class="fas fa-plus mr-2"></i> Nueva rutina
+          </button>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div id="calendar-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="routines-empty-state" class="hidden text-center py-16">
+          <div class="bg-card border border-dashed border-theme rounded-lg p-8 max-w-md mx-auto">
+            <i class="fas fa-calendar-plus text-5xl text-indigo-400 mb-4 opacity-50"></i>
+            <h3 class="text-xl font-bold text-main mb-2">No activar rutinas</h3>
+            <p class="text-muted mb-6 text-sm">Empieza a crear tus rutinas</p>
+            <button id="create-routine-empty" class="btn-primary px-6 py-2 rounded-lg">
+              Crear primera rutina
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Exercises View -->
+      <section id="exercises-view" class="hidden animate__animated animate__fadeIn">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-main">Libreria de ejercicios</h2>
+            <p class="text-muted text-sm">Administra tu base de datos de ejercicios</p>
+          </div>
+          <button id="add-exercise-btn" class="btn-primary px-4 py-2 rounded-lg shadow-md w-full sm:w-auto">
+            <i class="fas fa-plus mr-2"></i> Añadir ejercicio
+          </button>
+        </div>
+
+        <div class="bg-card rounded-lg mb-6 p-4 border border-theme">
+          <div class="relative">
+            <input type="text" id="exercise-search" placeholder="Search library..." class="w-full bg-input border border-theme rounded-lg py-2 pl-10 pr-4 text-main focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500">
+            <i class="fas fa-search absolute left-3 top-3 text-muted"></i>
+          </div>
+        </div>
+
+        <div id="exercises-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <!-- Populated by JS -->
+        </div>
+
+        <div id="exercises-empty-state" class="hidden text-center py-16">
+          <div class="bg-card border border-dashed border-theme rounded-lg p-8 max-w-md mx-auto">
+            <i class="fas fa-dumbbell text-5xl text-indigo-400 mb-4 opacity-50"></i>
+            <h3 class="text-xl font-bold text-main mb-2">Libreria de ejercicios</h3>
+            <p class="text-muted mb-6 text-sm">Agrega tu primer ejercicio para comenzar.</p>
+            <button id="add-exercise-empty" class="btn-primary px-6 py-2 rounded-lg">
+              Añadir ejercicio
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modals Container -->
+  <div id="modals-container">
+    
+    <!-- Create Routine Modal -->
+    <div id="modal-create-routine" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-card rounded-xl shadow-2xl max-w-md w-full animate__animated animate__zoomIn border border-theme" role="dialog">
+        <div class="p-6 border-b border-theme">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xl font-bold text-main">Crear rutina</h3>
+            <button class="modal-close text-muted hover:text-main text-xl"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        <div class="p-6">
+          <label class="block text-muted text-sm mb-2">Dias por semana</label>
+          <div class="grid grid-cols-7 gap-2 mb-4" id="days-count-selector">
+            <!-- Generated by JS -->
+          </div>
+          
+          <div id="specific-days-selector" class="hidden">
+            <label class="block text-muted text-sm mb-2 mt-4">Selecciona dias especificos</label>
+            <div class="grid grid-cols-7 gap-2" id="days-toggles">
+               <!-- Generated by JS -->
+            </div>
+          </div>
+        </div>
+        <div class="p-6 border-t border-theme flex justify-end space-x-3 bg-input rounded-b-xl">
+          <button class="modal-close px-4 py-2 border border-theme text-muted rounded-lg hover:bg-card">Cancelar</button>
+          <button id="confirm-create-routine" class="btn-primary px-4 py-2 rounded-lg">Crear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Day Modal -->
+    <div id="modal-edit-day" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-card rounded-xl shadow-2xl max-w-lg w-full animate__animated animate__zoomIn border border-theme" role="dialog">
+        <div class="p-6 border-b border-theme">
+          <div class="flex justify-between items-center">
+            <h3 id="modal-day-title" class="text-xl font-bold text-main">Trabajo diario</h3>
+            <button class="modal-close text-muted hover:text-main text-xl"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        <div class="p-6">
+          <div id="day-exercise-list" class="space-y-2 min-h-[100px]">
+             <!-- Populated by JS -->
+          </div>
+          
+          <div class="mt-4">
+             <button id="add-exercise-to-day" class="w-full py-3 border border-dashed border-theme text-muted rounded-lg hover:border-indigo-500 hover:text-indigo-500 flex items-center justify-center transition-colors">
+                <i class="fas fa-plus mr-2"></i> Añadir ejercicio a este día
+             </button>
+          </div>
+        </div>
+        <div class="p-4 border-t border-theme flex justify-end bg-input rounded-b-xl">
+          <button class="modal-close btn-primary px-4 py-2 rounded-lg">Hecho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Exercise Form Modal -->
+    <div id="modal-add-exercise" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-card rounded-xl shadow-2xl max-w-md w-full animate__animated animate__zoomIn border border-theme" role="dialog">
+        <div class="p-6 border-b border-theme">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xl font-bold text-main">Nuevo ejercicio</h3>
+            <button class="modal-close text-muted hover:text-main text-xl"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        <form id="exercise-form" class="p-6 space-y-4">
+          <div>
+            <label class="block text-muted text-sm mb-2">Nombre</label>
+            <input type="text" id="input-exercise-name" required class="w-full bg-input border border-theme rounded-lg py-2 px-3 text-main focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Bench Press">
+          </div>
+          <div>
+            <label class="block text-muted text-sm mb-2">Imagen URL</label>
+            <input type="text" id="input-exercise-image" class="w-full bg-input border border-theme rounded-lg py-2 px-3 text-main focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="https://...">
+          </div>
+        </form>
+        <div class="p-6 border-t border-theme flex justify-end space-x-3 bg-input rounded-b-xl">
+          <button class="modal-close px-4 py-2 border border-theme text-muted rounded-lg hover:bg-card">Cancelar</button>
+          <button id="save-exercise" class="btn-primary px-4 py-2 rounded-lg">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Select Exercise Modal -->
+    <div id="modal-select-exercise" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-card rounded-xl shadow-2xl max-w-md w-full animate__animated animate__zoomIn border border-theme" role="dialog">
+        <div class="p-6 border-b border-theme">
+          <input type="text" id="search-exercise-modal" placeholder="Buscar ejercicios..." class="w-full bg-input border border-theme rounded-lg py-2 px-4 text-main focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <div id="exercise-selector-list" class="p-6 space-y-2 max-h-[400px] overflow-y-auto">
+          <!-- Populated by JS -->
+        </div>
+        <div class="p-4 border-t border-theme flex justify-end bg-input rounded-b-xl">
+          <button class="modal-close px-4 py-2 border border-theme text-muted rounded-lg hover:bg-card">Cancelar</button>
+          <button id="confirm-add-exercises" class="btn-primary px-4 py-2 rounded-lg">Añadir seleccionados</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      // --- State Management ---
+      const state = {
+        currentView: 'routines',
+        theme: localStorage.getItem('theme') || 'dark',
+        routines: JSON.parse(localStorage.getItem('fitRoutines')) || [],
+        exercises: JSON.parse(localStorage.getItem('fitExercises')) || getDefaultExercises(),
+        selectedDaysCount: 3,
+        selectedSpecificDays: [],
+        currentEditingDay: null, // { routineIndex, dayIndex }
+        selectedExercisesToAdd: []
+      };
+
+      // --- Initial Setup ---
+      initApp();
+
+      function initApp() {
+        applyTheme(state.theme);
+        renderAll();
+        initSelectors();
+        attachEventListeners();
+      }
+
+      // --- Data Handling ---
+      function saveData() {
+        localStorage.setItem('fitRoutines', JSON.stringify(state.routines));
+        localStorage.setItem('fitExercises', JSON.stringify(state.exercises));
+        localStorage.setItem('theme', state.theme);
+      }
+
+      function getDefaultExercises() {
+        return [
+          { id: 'ex1', name: 'Bench Press', image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=300&q=80' },
+          { id: 'ex2', name: 'Squats', image: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=300&q=80' },
+          { id: 'ex3', name: 'Pull Ups', image: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=300&q=80' },
+          { id: 'ex4', name: 'Deadlift', image: 'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?auto=format&fit=crop&w=300&q=80' }
+        ];
+      }
+
+      // --- Rendering ---
+      function renderAll() {
+        renderRoutines();
+        renderExercises();
+        checkEmptyStates();
+      }
+
+      function renderRoutines() {
+        const container = $('#calendar-grid');
+        container.empty();
+        
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        // Take the first routine for simplicity, could be expanded for multiple routines
+        const routine = state.routines[0]; 
+        
+        if (!routine) return;
+
+        routine.days.forEach((exercisesIds, index) => {
+          const exercises = exercisesIds.map(id => state.exercises.find(e => e.id === id)).filter(Boolean);
+          const card = `
+            <div class="card p-4 flex flex-col">
+              <div class="flex justify-between items-center mb-3 pb-2 border-b border-theme">
+                <h3 class="font-bold text-lg text-main">${days[index]}</h3>
+                <span class="text-xs bg-indigo-500 text-white px-2 py-1 rounded-full">${exercises.length} ex.</span>
+              </div>
+              <div class="flex-grow space-y-2 mb-3">
+                ${exercises.length > 0 ? exercises.map(ex => `
+                  <div class="flex items-center gap-2 p-2 bg-input rounded-md">
+                    <img src="${ex.image}" class="w-8 h-8 rounded object-cover">
+                    <span class="text-sm text-main truncate">${ex.name}</span>
+                  </div>
+                `).join('') : `
+                  <div class="text-center text-muted text-sm py-4">
+                    Rest Day
+                  </div>
+                `}
+              </div>
+              <button class="edit-day-btn w-full mt-auto py-2 text-sm text-indigo-400 hover:bg-indigo-500 hover:text-white rounded-md transition-colors border border-indigo-500" data-routine="0" data-day="${index}">
+                <i class="fas fa-edit mr-1"></i> Edit
+              </button>
+            </div>
+          `;
+          container.append(card);
+        });
+      }
+
+      function renderExercises() {
+        const container = $('#exercises-grid');
+        container.empty();
+
+        state.exercises.forEach(ex => {
+          const card = `
+            <div class="card overflow-hidden group">
+              <div class="relative h-40">
+                <img src="${ex.image}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <button class="delete-exercise-btn bg-red-500 p-2 rounded-full text-white hover:bg-red-600 transition-transform transform scale-0 group-hover:scale-100" data-id="${ex.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+              </div>
+              <div class="p-3">
+                <h4 class="font-semibold text-main">${ex.name}</h4>
+              </div>
+            </div>
+          `;
+          container.append(card);
+        });
+      }
+
+      function checkEmptyStates() {
+        $('#routines-empty-state').toggleClass('hidden', state.routines.length > 0);
+        $('#calendar-grid').toggleClass('hidden', state.routines.length === 0);
+        $('#exercises-empty-state').toggleClass('hidden', state.exercises.length > 0);
+        $('#exercises-grid').toggleClass('hidden', state.exercises.length === 0);
+      }
+
+      // --- UI Logic ---
+      
+      function initSelectors() {
+        // Init Days Count Selector
+        const countContainer = $('#days-count-selector');
+        for(let i=1; i<=7; i++) {
+          const activeClass = i === state.selectedDaysCount ? 'bg-indigo-600 text-white border-indigo-600' : 'text-muted';
+          countContainer.append(`<button class="day-count-btn border border-theme py-2 rounded-md ${activeClass}" data-count="${i}">${i}</button>`);
+        }
+
+        // Init Specific Days Selector
+        const daysShort = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        const togglesContainer = $('#days-toggles');
+        daysShort.forEach((name, idx) => {
+           togglesContainer.append(`<button class="day-toggle-btn border border-theme py-2 rounded-md text-muted" data-index="${idx}">${name}</button>`);
+        });
+      }
+
+      function applyTheme(theme) {
+        if (theme === 'light') {
+          $('body').addClass('light-mode');
+          $('#theme-icon-light').removeClass('hidden');
+          $('#theme-icon-dark').addClass('hidden');
+        } else {
+          $('body').removeClass('light-mode');
+          $('#theme-icon-light').addClass('hidden');
+          $('#theme-icon-dark').removeClass('hidden');
+        }
+      }
+
+      function openModal(id) {
+        $(`#${id}`).removeClass('hidden');
+      }
+
+      function closeModal(id) {
+        $(`#${id}`).addClass('hidden');
+      }
+
+      function closeAllModals() {
+        $('.modal-backdrop').addClass('hidden');
+        state.selectedExercisesToAdd = [];
+      }
+
+      // --- Event Listeners (Delegated) ---
+      
+      function attachEventListeners() {
+        
+        // Navigation
+        $('.nav-link').on('click', function(e) {
+          e.preventDefault();
+          const view = $(this).data('view');
+          $('.nav-link').removeClass('active bg-indigo-600 text-white').addClass('text-muted');
+          $(this).addClass('active bg-indigo-600 text-white').removeClass('text-muted');
+          
+          $('section[id$="-view"]').addClass('hidden');
+          $(`#${view}-view`).removeClass('hidden');
+        });
+
+        // Mobile Sidebar
+        $('#sidebar-toggle, #sidebar-overlay').on('click', function() {
+          $('#sidebar').toggleClass('-translate-x-full');
+          $('#sidebar-overlay').toggleClass('hidden');
+        });
+
+        // Theme Toggle
+        $('#theme-toggle').on('click', function() {
+          state.theme = state.theme === 'dark' ? 'light' : 'dark';
+          applyTheme(state.theme);
+          saveData();
+        });
+
+        // Modals General
+        $(document).on('click', '.modal-close', closeAllModals);
+        $(document).on('click', '.modal-backdrop', function(e) {
+          if ($(e.target).hasClass('modal-backdrop')) closeAllModals();
+        });
+
+        // --- Routine Logic ---
+        
+        $('#create-routine-btn, #create-routine-empty').on('click', () => openModal('modal-create-routine'));
+
+        $(document).on('click', '.day-count-btn', function() {
+          const count = $(this).data('count');
+          state.selectedDaysCount = count;
+          $('.day-count-btn').removeClass('bg-indigo-600 text-white border-indigo-600').addClass('text-muted');
+          $(this).addClass('bg-indigo-600 text-white border-indigo-600').removeClass('text-muted');
+          
+          if (count < 7) {
+            $('#specific-days-selector').removeClass('hidden');
+          } else {
+            $('#specific-days-selector').addClass('hidden');
+          }
+        });
+
+        $(document).on('click', '.day-toggle-btn', function() {
+          $(this).toggleClass('bg-indigo-600 text-white border-indigo-600 text-muted');
+        });
+
+        $('#confirm-create-routine').on('click', function() {
+           const selectedDays = [];
+           if (state.selectedDaysCount < 7) {
+             $('.day-toggle-btn.bg-indigo-600').each(function() {
+               selectedDays.push($(this).data('index'));
+             });
+             if (selectedDays.length !== state.selectedDaysCount) {
+               alert(`Please select exactly ${state.selectedDaysCount} days.`);
+               return;
+             }
+           } else {
+             for(let i=0; i<7; i++) selectedDays.push(i);
+           }
+
+           // Create Routine Structure
+           const newRoutine = { id: Date.now(), days: Array(7).fill([]) }; // Initialize all days as empty
+           selectedDays.forEach(idx => newRoutine.days[idx] = []); // Explicit empty array for active days
+           
+           // If replacing, simply overwrite index 0 or push
+           if(state.routines.length > 0) state.routines[0] = newRoutine;
+           else state.routines.push(newRoutine);
+
+           saveData();
+           renderAll();
+           closeAllModals();
+        });
+
+        // Edit Day
+        $(document).on('click', '.edit-day-btn', function() {
+          const routineIdx = $(this).data('routine');
+          const dayIdx = $(this).data('day');
+          state.currentEditingDay = { routineIdx, dayIdx };
+          renderDayModal(dayIdx);
+          openModal('modal-edit-day');
+        });
+
+        function renderDayModal(dayIdx) {
+          const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          $('#modal-day-title').text(days[dayIdx] + ' Workout');
+          
+          const routine = state.routines[state.currentEditingDay.routineIdx];
+          const exercisesIds = routine.days[dayIdx] || [];
+          
+          const list = $('#day-exercise-list');
+          list.empty();
+
+          exercisesIds.forEach((id, index) => {
+            const ex = state.exercises.find(e => e.id === id);
+            if(!ex) return;
+            list.append(`
+              <div class="exercise-item flex items-center gap-3 p-2 rounded-lg cursor-move" data-id="${ex.id}">
+                <span class="text-muted cursor-grab"><i class="fas fa-grip-vertical"></i></span>
+                <img src="${ex.image}" class="w-12 h-12 rounded object-cover">
+                <div class="flex-1">
+                   <p class="text-main font-medium">${ex.name}</p>
+                   <p class="text-muted text-xs">Drag to reorder</p>
+                </div>
+                <button class="remove-day-ex-btn text-red-400 hover:text-red-600 p-2"><i class="fas fa-trash"></i></button>
+              </div>
+            `);
+          });
+
+          // Init Sortable
+          list.sortable({
+            handle: '.cursor-grab',
+            placeholder: 'sortable-placeholder',
+            update: function(event, ui) {
+              const newOrder = [];
+              $('#day-exercise-list .exercise-item').each(function() {
+                newOrder.push($(this).data('id'));
+              });
+              state.routines[state.currentEditingDay.routineIdx].days[dayIdx] = newOrder;
+              saveData();
+            }
+          });
+        }
+
+        $(document).on('click', '.remove-day-ex-btn', function() {
+          const item = $(this).closest('.exercise-item');
+          const id = item.data('id');
+          const { routineIdx, dayIdx } = state.currentEditingDay;
+          
+          // Remove from state
+          const list = state.routines[routineIdx].days[dayIdx];
+          const index = list.indexOf(id);
+          if (index > -1) list.splice(index, 1);
+          
+          saveData();
+          item.fadeOut(200, function() { $(this).remove(); });
+          renderRoutines(); // Update main view as well
+        });
+
+        $('#add-exercise-to-day').on('click', function() {
+          renderExerciseSelector();
+          openModal('modal-select-exercise');
+        });
+
+        // --- Exercise Logic ---
+        
+        $('#add-exercise-btn, #add-exercise-empty').on('click', () => {
+          $('#input-exercise-name').val('');
+          $('#input-exercise-image').val('');
+          openModal('modal-add-exercise');
+        });
+
+        $('#save-exercise').on('click', function() {
+          const name = $('#input-exercise-name').val().trim();
+          const img = $('#input-exercise-image').val().trim() || 'https://via.placeholder.com/300';
+          
+          if(!name) return;
+
+          state.exercises.push({ id: 'ex_' + Date.now(), name, image: img });
+          saveData();
+          renderExercises();
+          checkEmptyStates();
+          closeAllModals();
+        });
+
+        $(document).on('click', '.delete-exercise-btn', function() {
+          if(!confirm('Delete this exercise?')) return;
+          const id = $(this).data('id');
+          state.exercises = state.exercises.filter(e => e.id !== id);
+          
+          // Remove from routines
+          state.routines.forEach(r => {
+            r.days = r.days.map(d => d.filter(exId => exId !== id));
+          });
+
+          saveData();
+          renderAll();
+        });
+
+        // Search in Main View
+        $('#exercise-search').on('input', function() {
+           const term = $(this).val().toLowerCase();
+           $('#exercises-grid .card').each(function() {
+              const name = $(this).find('h4').text().toLowerCase();
+              $(this).toggle(name.includes(term));
+           });
+        });
+
+        // Exercise Selector
+        function renderExerciseSelector() {
+          const list = $('#exercise-selector-list');
+          list.empty();
+          state.selectedExercisesToAdd = [];
+          
+          state.exercises.forEach(ex => {
+            list.append(`
+              <label class="flex items-center gap-3 p-2 hover:bg-input rounded-lg cursor-pointer transition-colors">
+                <input type="checkbox" class="ex-select-checkbox hidden" value="${ex.id}">
+                <div class="w-5 h-5 border-2 border-theme rounded flex items-center justify-center checkbox-visual">
+                   <i class="fas fa-check text-white text-xs hidden"></i>
+                </div>
+                <img src="${ex.image}" class="w-10 h-10 rounded object-cover">
+                <span class="text-main">${ex.name}</span>
+              </label>
+            `);
+          });
+        }
+
+        $(document).on('change', '.ex-select-checkbox', function() {
+           const visual = $(this).siblings('.checkbox-visual');
+           const icon = visual.find('i');
+           if(this.checked) {
+             visual.addClass('bg-indigo-600 border-indigo-600');
+             icon.removeClass('hidden');
+           } else {
+             visual.removeClass('bg-indigo-600 border-indigo-600');
+             icon.addClass('hidden');
+           }
+        });
+
+        $('#search-exercise-modal').on('input', function() {
+           const term = $(this).val().toLowerCase();
+           $('#exercise-selector-list label').each(function() {
+              const name = $(this).find('span').text().toLowerCase();
+              $(this).toggle(name.includes(term));
+           });
+        });
+
+        $('#confirm-add-exercises').on('click', function() {
+           const selected = [];
+           $('.ex-select-checkbox:checked').each(function() {
+             selected.push($(this).val());
+           });
+
+           if(selected.length > 0 && state.currentEditingDay) {
+             const { routineIdx, dayIdx } = state.currentEditingDay;
+             state.routines[routineIdx].days[dayIdx].push(...selected);
+             saveData();
+             renderDayModal(dayIdx); // Re-render inner list
+             renderRoutines(); // Update background
+           }
+           closeAllModals();
+        });
+
+      }
+    });
+  </script>
+</body>
+</html>
