@@ -1,790 +1,1195 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>WE GO GYM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <style>
-    /* Variables para Tema Oscuro (Default) */
     :root {
-      --bg-primary: #121212;
-      --bg-secondary: #1E1E1E;
-      --bg-tertiary: #2D2D2D;
-      --text-primary: #F3F4F6;
-      --text-secondary: #9CA3AF;
-      --border-color: #374151;
-      --accent-color: #6366F1;
-      --accent-hover: #4F46E5;
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #161616;
+      --bg-tertiary: #1e1e1e;
+      --text-primary: #f5f5f0;
+      --text-secondary: #888880;
+      --border-color: #272727;
+      --accent: #e8ff00;
+      --accent-dim: #c4d800;
+      --accent-glow: rgba(232, 255, 0, 0.15);
+      --red: #ff3b30;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
     }
-
-    /* Variables para Tema Claro */
     body.light-mode {
-      --bg-primary: #F3F4F6;
-      --bg-secondary: #FFFFFF;
-      --bg-tertiary: #E5E7EB;
-      --text-primary: #111827;
-      --text-secondary: #4B5563;
-      --border-color: #D1D5DB;
-      --accent-color: #4F46E5;
-      --accent-hover: #4338CA;
+      --bg-primary: #f0f0eb;
+      --bg-secondary: #e8e8e3;
+      --bg-card: #ffffff;
+      --bg-tertiary: #e0e0db;
+      --text-primary: #111111;
+      --text-secondary: #666660;
+      --border-color: #d0d0cb;
+      --accent: #1a1aff;
+      --accent-dim: #0000cc;
+      --accent-glow: rgba(26, 26, 255, 0.1);
     }
 
+    * { box-sizing: border-box; }
     body {
       background-color: var(--bg-primary);
       color: var(--text-primary);
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: var(--font-body);
+      font-weight: 400;
       transition: background-color 0.3s ease, color 0.3s ease;
       overflow-x: hidden;
+      min-height: 100vh;
     }
 
-    /* Utility classes mapped to CSS variables for Tailwind compatibility */
-    .bg-card { background-color: var(--bg-secondary); }
-    .bg-input { background-color: var(--bg-tertiary); }
-    .text-main { color: var(--text-primary); }
-    .text-muted { color: var(--text-secondary); }
-    .border-theme { border-color: var(--border-color); }
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.3;
+    }
 
+    /* Header */
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .logo-text {
+      font-family: var(--font-display);
+      letter-spacing: 0.05em;
+      font-size: 1.5rem;
+      color: var(--text-primary);
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: 3px;
+      vertical-align: middle;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    /* Sidebar */
     .sidebar {
-      background-color: var(--bg-secondary);
+      background: var(--bg-secondary);
       border-right: 1px solid var(--border-color);
       transition: transform 0.3s ease;
+      width: 220px;
     }
+    .nav-link {
+      display: flex; align-items: center;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      transition: all 0.15s ease;
+      gap: 10px;
+      border: 1px solid transparent;
+    }
+    .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+    .nav-link.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-color: rgba(232,255,0,0.2);
+    }
+    body.light-mode .nav-link.active {
+      border-color: rgba(26,26,255,0.2);
+    }
+    .nav-link.active i { color: var(--accent); }
 
+    /* Cards */
     .card {
-      background-color: var(--bg-secondary);
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border-radius: 10px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
-
     .card:hover {
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
     }
 
-    .btn-primary {
-      background-color: var(--accent-color);
-      color: white;
-      transition: all 0.2s ease;
-    }
-
-    .btn-primary:hover {
-      background-color: var(--accent-hover);
-      transform: translateY(-1px);
-    }
-
-    .exercise-item {
+    /* Day Card */
+    .day-card {
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
-      background-color: var(--bg-tertiary);
+      border-radius: 10px;
       transition: all 0.2s ease;
+      overflow: hidden;
     }
-    
-    .exercise-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    .day-card:hover { border-color: rgba(232,255,0,0.3); }
+    .day-header {
+      background: var(--bg-tertiary);
+      padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .day-name {
+      font-family: var(--font-display);
+      letter-spacing: 0.08em;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+    .day-badge {
+      background: var(--accent);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
     }
 
+    /* Buttons */
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 8px 18px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      border: none; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary:hover {
+      background: var(--accent-dim);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      font-weight: 500;
+      font-size: 0.8rem;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .btn-ghost:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+
+    /* Edit day button */
+    .edit-day-btn {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 7px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.15s ease;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      margin-top: 10px;
+    }
+    .edit-day-btn:hover {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Exercise mini item in day card */
+    .mini-ex {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+    .mini-ex img { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; }
+    .mini-ex span { font-size: 0.78rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Exercise Card in Library */
+    .ex-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .ex-card:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); transform: translateY(-3px); }
+    .ex-card .img-wrap { position: relative; height: 150px; overflow: hidden; }
+    .ex-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+    .ex-card:hover img { transform: scale(1.06); }
+    .ex-card .overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+      opacity: 0; transition: opacity 0.2s ease;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ex-card:hover .overlay { opacity: 1; }
+    .ex-card .delete-exercise-btn {
+      background: var(--red);
+      border: none; color: white;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s ease;
+    }
+    .ex-card .delete-exercise-btn:hover { transform: scale(1.15); }
+    .muscle-tag {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Modal */
     .modal-backdrop {
-      background-color: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(5px);
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      position: fixed; inset: 0; z-index: 1000;
+      display: none; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      max-width: 480px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      animation: popIn 0.2s ease;
+    }
+    .modal-box.wide { max-width: 560px; }
+    @keyframes popIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-header {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; background: var(--bg-card); z-index: 2;
+    }
+    .modal-title {
+      font-family: var(--font-display);
+      letter-spacing: 0.06em;
+      font-size: 1.3rem;
+    }
+    .modal-close-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .modal-close-btn:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      display: flex; justify-content: flex-end; gap: 8px;
+      background: var(--bg-secondary);
+      border-radius: 0 0 12px 12px;
+      position: sticky; bottom: 0;
     }
 
-    /* Drag and Drop Styles */
+    /* Inputs */
+    .input-field {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 7px;
+      padding: 9px 12px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .input-field::placeholder { color: var(--text-secondary); }
+    label.field-label { display: block; color: var(--text-secondary); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+
+    /* Day count selector */
+    .day-count-btn {
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border-radius: 6px;
+      padding: 8px 4px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .day-count-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+    .day-count-btn.selected { background: var(--accent); color: #000; border-color: var(--accent); }
+
+    /* Day toggles */
+    .day-toggle-btn {
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border-radius: 6px;
+      padding: 8px 4px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .day-toggle-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+    .day-toggle-btn.selected { background: var(--accent); color: #000; border-color: var(--accent); }
+
+    /* Sortable drag */
+    .exercise-drag-item {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      cursor: default;
+      transition: all 0.15s ease;
+    }
+    .exercise-drag-item:hover { border-color: rgba(232,255,0,0.3); }
+    .exercise-drag-item img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; }
+    .drag-handle { color: var(--text-secondary); cursor: grab; font-size: 0.9rem; padding: 4px; }
+    .drag-handle:active { cursor: grabbing; }
     .sortable-placeholder {
-      border: 2px dashed var(--accent-color);
-      background-color: rgba(99, 102, 241, 0.1);
+      border: 2px dashed var(--accent);
+      background: var(--accent-glow);
+      height: 64px; margin-bottom: 6px;
+      border-radius: 8px;
       visibility: visible !important;
-      height: 60px;
-      margin-bottom: 0.5rem;
-      border-radius: 0.5rem;
     }
-    
-    .dragging {
-      opacity: 0.9;
-      transform: scale(1.02);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      z-index: 100;
+    .dragging { opacity: 0.8; transform: scale(1.02); box-shadow: 0 10px 30px rgba(0,0,0,0.4); z-index: 200; }
+
+    /* Exercise selector checkboxes */
+    .ex-select-label {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.1s;
+      border: 1px solid transparent;
     }
+    .ex-select-label:hover { background: var(--bg-tertiary); }
+    .ex-select-label.checked { background: var(--accent-glow); border-color: rgba(232,255,0,0.3); }
+    .checkbox-vis {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border-color);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .ex-select-label.checked .checkbox-vis { background: var(--accent); border-color: var(--accent); }
+    .checkbox-vis i { color: #000; font-size: 0.65rem; display: none; }
+    .ex-select-label.checked .checkbox-vis i { display: block; }
+    .ex-select-label img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+
+    /* Theme toggle */
+    .theme-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .theme-btn:hover { color: var(--text-primary); border-color: var(--text-secondary); }
 
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-    /* Toggle Switch */
-    .toggle-switch {
-      position: relative;
-      width: 50px;
-      height: 24px;
-      background-color: var(--bg-tertiary);
-      border-radius: 12px;
+    /* Tip box */
+    .tip-box {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    /* Fade in */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.3s ease both; }
+
+    /* Progress bar */
+    .progress-bar-bg { background: var(--bg-tertiary); border-radius: 4px; height: 4px; }
+    .progress-bar-fill { background: var(--accent); border-radius: 4px; height: 4px; transition: width 0.3s ease; }
+
+    /* Rest day */
+    .rest-day { text-align: center; padding: 1.5rem 0; color: var(--text-secondary); font-size: 0.8rem; letter-spacing: 0.05em; }
+    .rest-day i { display: block; font-size: 1.3rem; margin-bottom: 4px; opacity: 0.4; }
+
+    /* Stats row */
+    .stat-chip {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+    }
+    .stat-num { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 0.05em; color: var(--accent); }
+    .stat-label { font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.07em; text-transform: uppercase; margin-top: 2px; }
+
+    /* Section title */
+    .section-title { font-family: var(--font-display); letter-spacing: 0.08em; font-size: 1.8rem; }
+    .section-subtitle { color: var(--text-secondary); font-size: 0.82rem; margin-top: 2px; }
+
+    /* Filter chips */
+    .filter-chip {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: all 0.15s ease;
+      white-space: nowrap;
     }
-    .toggle-switch::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background-color: white;
-      border-radius: 50%;
-      transition: transform 0.3s;
-    }
-    body:not(.light-mode) .toggle-switch::after {
-      transform: translateX(26px);
+    .filter-chip:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+    .filter-chip.active { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+
+    @media (max-width: 767px) {
+      .sidebar { position: fixed; height: calc(100vh - 56px); z-index: 40; transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
     }
   </style>
 </head>
-<body class="min-h-screen">
-  <!-- Header -->
-  <header class="bg-card shadow-md px-4 py-3 flex items-center justify-between sticky top-0 z-50">
-    <div class="flex items-center">
-      <button id="sidebar-toggle" class="md:hidden text-muted hover:text-main mr-3">
-        <i class="fas fa-bars text-xl"></i>
-      </button>
-      <h1 class="text-xl font-bold text-main flex items-center">
-        <i class="fas fa-dumbbell text-indigo-500 mr-2"></i>
-        WE GO GYM - Tu planificaci&oacute;n de ejercicios
-      </h1>
+<body>
+
+<!-- Header -->
+<header class="px-4 py-3 flex items-center justify-between" style="border-bottom:1px solid var(--border-color)">
+  <div class="flex items-center gap-3">
+    <button id="sidebar-toggle" class="md:hidden" style="color:var(--text-secondary);background:none;border:none;cursor:pointer;font-size:1.1rem">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="logo-text">
+      WE GO GYM<span class="logo-dot"></span>
     </div>
-    <div class="flex items-center gap-4">
-      <button id="theme-toggle" class="flex items-center gap-2 text-muted hover:text-main p-2 rounded-lg" aria-label="Toggle theme">
-        <i class="fas fa-sun text-lg" id="theme-icon-light"></i>
-        <i class="fas fa-moon text-lg hidden" id="theme-icon-dark"></i>
-        <div class="toggle-switch hidden sm:block"></div>
+  </div>
+  <div class="flex items-center gap-2">
+    <button id="theme-toggle" class="theme-btn">
+      <i class="fas fa-circle-half-stroke"></i>
+      <span class="hidden sm:inline" id="theme-label">Modo claro</span>
+    </button>
+  </div>
+</header>
+
+<div class="flex" style="min-height:calc(100vh - 57px)">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar flex-shrink-0 flex flex-col py-5 px-3">
+    <nav class="flex-1">
+      <p style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;color:var(--text-secondary);text-transform:uppercase;padding:0 8px;margin-bottom:10px">Navegación</p>
+      <ul class="space-y-1">
+        <li>
+          <a href="#" class="nav-link active" data-view="routines">
+            <i class="fas fa-calendar-week w-4 text-center"></i>
+            <span>Plan semanal</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link" data-view="exercises">
+            <i class="fas fa-dumbbell w-4 text-center"></i>
+            <span>Librería de ejercicios</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="tip-box hidden md:block mt-auto mx-1">
+      <p style="font-size:0.7rem;font-weight:700;color:var(--accent);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px"><i class="fas fa-bolt mr-1"></i> Consejo</p>
+      <p style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5">La consistencia supera la intensidad. Mantén tu rutina 8 semanas y verás resultados reales.</p>
+    </div>
+  </aside>
+
+  <!-- Overlay mobile -->
+  <div id="sidebar-overlay" class="fixed inset-0 z-30 hidden md:hidden" style="background:rgba(0,0,0,0.6)"></div>
+
+  <!-- Main -->
+  <main class="flex-1 p-4 md:p-6 overflow-y-auto">
+
+    <!-- PLAN SEMANAL -->
+    <section id="routines-view" class="fade-up">
+
+      <!-- Stats -->
+      <div id="stats-row" class="grid grid-cols-3 gap-3 mb-6 hidden">
+        <div class="stat-chip">
+          <div class="stat-num" id="stat-days">0</div>
+          <div class="stat-label">Días activos</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-num" id="stat-exercises">0</div>
+          <div class="stat-label">Ejercicios totales</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-num" id="stat-rest">0</div>
+          <div class="stat-label">Días descanso</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
+        <div>
+          <h2 class="section-title">Plan semanal</h2>
+          <p class="section-subtitle">Organiza y gestiona tus rutinas</p>
+        </div>
+        <button id="create-routine-btn" class="btn-primary w-full sm:w-auto">
+          <i class="fas fa-plus"></i> Nueva rutina
+        </button>
+      </div>
+
+      <div id="calendar-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6 hidden"></div>
+
+      <!-- Empty State -->
+      <div id="routines-empty-state" class="hidden text-center py-16">
+        <div class="card p-10 max-w-sm mx-auto" style="border-style:dashed">
+          <div style="font-size:3rem;opacity:0.3;margin-bottom:1rem">📅</div>
+          <h3 style="font-family:var(--font-display);font-size:1.4rem;letter-spacing:0.05em;margin-bottom:8px">Sin rutinas aún</h3>
+          <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1.5rem">Crea tu primera rutina semanal y empieza a entrenar con orden.</p>
+          <button id="create-routine-empty" class="btn-primary">Crear primera rutina</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIBRERÍA DE EJERCICIOS -->
+    <section id="exercises-view" class="hidden fade-up">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
+        <div>
+          <h2 class="section-title">Librería</h2>
+          <p class="section-subtitle">Todos tus ejercicios disponibles</p>
+        </div>
+        <button id="add-exercise-btn" class="btn-primary w-full sm:w-auto">
+          <i class="fas fa-plus"></i> Añadir ejercicio
+        </button>
+      </div>
+
+      <div class="card p-3 mb-4">
+        <div class="relative mb-3">
+          <input type="text" id="exercise-search" placeholder="Buscar ejercicios..." class="input-field" style="padding-left:36px">
+          <i class="fas fa-search absolute" style="left:12px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:0.85rem"></i>
+        </div>
+        <div class="flex gap-2 flex-wrap" id="muscle-filters">
+          <button class="filter-chip active" data-muscle="all">Todos</button>
+          <button class="filter-chip" data-muscle="Pecho">Pecho</button>
+          <button class="filter-chip" data-muscle="Espalda">Espalda</button>
+          <button class="filter-chip" data-muscle="Piernas">Piernas</button>
+          <button class="filter-chip" data-muscle="Hombros">Hombros</button>
+          <button class="filter-chip" data-muscle="Bíceps">Bíceps</button>
+          <button class="filter-chip" data-muscle="Tríceps">Tríceps</button>
+          <button class="filter-chip" data-muscle="Core">Core</button>
+          <button class="filter-chip" data-muscle="Cardio">Cardio</button>
+        </div>
+      </div>
+
+      <div id="exercises-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+
+      <div id="exercises-empty-state" class="hidden text-center py-16">
+        <div class="card p-10 max-w-sm mx-auto" style="border-style:dashed">
+          <div style="font-size:3rem;opacity:0.3;margin-bottom:1rem">🏋️</div>
+          <h3 style="font-family:var(--font-display);font-size:1.4rem;letter-spacing:0.05em;margin-bottom:8px">Librería vacía</h3>
+          <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1.5rem">Agrega tu primer ejercicio.</p>
+          <button id="add-exercise-empty" class="btn-primary">Añadir ejercicio</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ MODALS ============ -->
+
+<!-- Modal: Crear Rutina -->
+<div id="modal-create-routine" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Crear rutina</h3>
+      <button class="modal-close-btn modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <label class="field-label">¿Cuántos días por semana?</label>
+      <div class="grid grid-cols-7 gap-2 mb-5" id="days-count-selector"></div>
+
+      <div id="specific-days-selector" class="hidden">
+        <label class="field-label">Selecciona los días específicos</label>
+        <div class="grid grid-cols-7 gap-2" id="days-toggles"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost modal-close">Cancelar</button>
+      <button id="confirm-create-routine" class="btn-primary">Crear rutina</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar día -->
+<div id="modal-edit-day" class="modal-backdrop">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-day-title">Entrenamiento</h3>
+      <button class="modal-close-btn modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="day-exercise-list" class="space-y-2 min-h-[80px]"></div>
+      <button id="add-exercise-to-day" class="w-full mt-4 py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all" style="border:1px dashed var(--border-color);color:var(--text-secondary);background:none;cursor:pointer"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--border-color)';this.style.color='var(--text-secondary)'">
+        <i class="fas fa-plus"></i> Añadir ejercicio
       </button>
     </div>
-  </header>
+    <div class="modal-footer">
+      <button class="btn-primary modal-close">Hecho</button>
+    </div>
+  </div>
+</div>
 
-  <div class="flex min-h-[calc(100vh-60px)]">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar w-64 fixed md:relative h-[calc(100vh-60px)] z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
-      <nav class="py-4 px-4 h-full flex flex-col">
-        <div class="mb-8">
-          <h2 class="text-xs font-semibold text-muted uppercase tracking-wider mb-4 px-4">Menu</h2>
-          <ul class="space-y-1">
-            <li>
-              <a href="#" class="nav-link active flex items-center px-4 py-3 text-white bg-indigo-600 rounded-lg" data-view="routines">
-                <i class="fas fa-calendar-week mr-3 w-5"></i>
-                <span>Mis rutinas</span>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="nav-link flex items-center px-4 py-3 text-muted hover:bg-input rounded-lg" data-view="exercises">
-                <i class="fas fa-dumbbell mr-3 w-5"></i>
-                <span>Libreria de ejercicios</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        
-        <div class="mt-auto hidden md:block">
-          <div class="bg-input rounded-lg p-4 text-sm">
-            <h3 class="font-medium text-main mb-2 flex items-center"><i class="fas fa-lightbulb text-yellow-400 mr-2"></i> Tips</h3>
-            <p class="text-muted text-xs">La consistencia es clave. Mantente fiel a tu rutina durante al menos 8 semanas para ver resultados significativos.</p>
+<!-- Modal: Añadir ejercicio -->
+<div id="modal-add-exercise" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Nuevo ejercicio</h3>
+      <button class="modal-close-btn modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body space-y-4">
+      <div>
+        <label class="field-label">Nombre del ejercicio</label>
+        <input type="text" id="input-exercise-name" class="input-field" placeholder="ej. Press de banca">
+      </div>
+      <div>
+        <label class="field-label">Músculo principal</label>
+        <select id="input-exercise-muscle" class="input-field">
+          <option value="Pecho">Pecho</option>
+          <option value="Espalda">Espalda</option>
+          <option value="Piernas">Piernas</option>
+          <option value="Hombros">Hombros</option>
+          <option value="Bíceps">Bíceps</option>
+          <option value="Tríceps">Tríceps</option>
+          <option value="Core">Core</option>
+          <option value="Cardio">Cardio</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">URL de imagen (opcional)</label>
+        <input type="text" id="input-exercise-image" class="input-field" placeholder="https://...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost modal-close">Cancelar</button>
+      <button id="save-exercise" class="btn-primary">Guardar ejercicio</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Seleccionar ejercicio para el día -->
+<div id="modal-select-exercise" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Añadir ejercicios</h3>
+      <button class="modal-close-btn modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" style="padding-bottom:0">
+      <div class="relative mb-3">
+        <input type="text" id="search-exercise-modal" placeholder="Buscar..." class="input-field" style="padding-left:36px">
+        <i class="fas fa-search absolute" style="left:12px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:0.85rem"></i>
+      </div>
+      <div id="exercise-selector-list" class="space-y-1 max-h-[380px] overflow-y-auto pb-4"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost modal-close">Cancelar</button>
+      <button id="confirm-add-exercises" class="btn-primary">Añadir seleccionados</button>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+
+  // ─── STATE ───────────────────────────────────────────────────
+  const state = {
+    theme: localStorage.getItem('wgg_theme') || 'dark',
+    routines: JSON.parse(localStorage.getItem('wgg_routines')) || [],
+    exercises: JSON.parse(localStorage.getItem('wgg_exercises')) || getDefaultExercises(),
+    selectedDaysCount: 4,
+    currentEditingDay: null,
+    activeFilter: 'all',
+  };
+
+  function getDefaultExercises() {
+    return [
+      // PECHO
+      { id:'ex_bp',   name:'Press de banca',      muscle:'Pecho',    image:'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_inc',  name:'Press inclinado',      muscle:'Pecho',    image:'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_fly',  name:'Aperturas con mancuerna', muscle:'Pecho', image:'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_dip',  name:'Fondos en paralelas',  muscle:'Pecho',    image:'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=400&q=80' },
+      // ESPALDA
+      { id:'ex_pu',   name:'Dominadas',            muscle:'Espalda',  image:'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_dl',   name:'Peso muerto',          muscle:'Espalda',  image:'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_row',  name:'Remo con barra',       muscle:'Espalda',  image:'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_lat',  name:'Jalón al pecho',       muscle:'Espalda',  image:'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_trp',  name:'Remo en polea',        muscle:'Espalda',  image:'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=400&q=80' },
+      // PIERNAS
+      { id:'ex_sq',   name:'Sentadillas',          muscle:'Piernas',  image:'https://images.unsplash.com/photo-1566241142559-40e1dab266c6?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_lun',  name:'Zancadas',             muscle:'Piernas',  image:'https://images.unsplash.com/photo-1434682881908-b43d0467b798?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_leg',  name:'Prensa de piernas',    muscle:'Piernas',  image:'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_calf', name:'Elevaciones de talón', muscle:'Piernas',  image:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_rdl',  name:'Peso muerto rumano',   muscle:'Piernas',  image:'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=400&q=80' },
+      // HOMBROS
+      { id:'ex_ohp',  name:'Press militar',        muscle:'Hombros',  image:'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_lat2', name:'Elevaciones laterales',muscle:'Hombros',  image:'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_frt',  name:'Elevaciones frontales',muscle:'Hombros',  image:'https://images.unsplash.com/photo-1576678927484-cc907957088c?auto=format&fit=crop&w=400&q=80' },
+      // BÍCEPS
+      { id:'ex_curl', name:'Curl con barra',       muscle:'Bíceps',   image:'https://images.unsplash.com/photo-1590487988256-9ed24133863e?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_hcurl',name:'Curl martillo',        muscle:'Bíceps',   image:'https://images.unsplash.com/photo-1584466977773-e625c37cdd50?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_pcurl',name:'Curl predicador',      muscle:'Bíceps',   image:'https://images.unsplash.com/photo-1618355776464-8666794d2520?auto=format&fit=crop&w=400&q=80' },
+      // TRÍCEPS
+      { id:'ex_tri',  name:'Extensión de tríceps', muscle:'Tríceps',  image:'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_skc',  name:'Skull crusher',        muscle:'Tríceps',  image:'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_pd',   name:'Jalón de tríceps',     muscle:'Tríceps',  image:'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=400&q=80' },
+      // CORE
+      { id:'ex_pl',   name:'Plancha',              muscle:'Core',     image:'https://images.unsplash.com/photo-1566241142559-40e1dab266c6?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_cru',  name:'Crunch abdominal',     muscle:'Core',     image:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_rus',  name:'Russian twist',        muscle:'Core',     image:'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_lgr',  name:'Elevación de piernas', muscle:'Core',     image:'https://images.unsplash.com/photo-1576678927484-cc907957088c?auto=format&fit=crop&w=400&q=80' },
+      // CARDIO
+      { id:'ex_run',  name:'Carrera',              muscle:'Cardio',   image:'https://images.unsplash.com/photo-1502904550040-7534597429ae?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_rope', name:'Comba',                muscle:'Cardio',   image:'https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_bike', name:'Bicicleta estática',   muscle:'Cardio',   image:'https://images.unsplash.com/photo-1576678927484-cc907957088c?auto=format&fit=crop&w=400&q=80' },
+      { id:'ex_row2', name:'Remo ergómetro',       muscle:'Cardio',   image:'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=400&q=80' },
+    ];
+  }
+
+  // ─── INIT ──────────────────────────────────────────────────
+  applyTheme(state.theme);
+  buildSelectors();
+  renderAll();
+  attachListeners();
+
+  // ─── SAVE ─────────────────────────────────────────────────
+  function save() {
+    localStorage.setItem('wgg_routines', JSON.stringify(state.routines));
+    localStorage.setItem('wgg_exercises', JSON.stringify(state.exercises));
+    localStorage.setItem('wgg_theme', state.theme);
+  }
+
+  // ─── THEME ────────────────────────────────────────────────
+  function applyTheme(t) {
+    if (t === 'light') {
+      $('body').addClass('light-mode');
+      $('#theme-label').text('Modo oscuro');
+    } else {
+      $('body').removeClass('light-mode');
+      $('#theme-label').text('Modo claro');
+    }
+  }
+
+  // ─── RENDER ALL ───────────────────────────────────────────
+  function renderAll() {
+    renderRoutines();
+    renderExercises();
+  }
+
+  // ─── RENDER ROUTINES ──────────────────────────────────────
+  const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const DAYS_ES_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  function renderRoutines() {
+    const routine = state.routines[0];
+    const grid = $('#calendar-grid');
+    grid.empty();
+
+    if (!routine) {
+      $('#routines-empty-state').removeClass('hidden');
+      $('#calendar-grid').addClass('hidden');
+      $('#stats-row').addClass('hidden');
+      return;
+    }
+
+    $('#routines-empty-state').addClass('hidden');
+    $('#calendar-grid').removeClass('hidden');
+
+    let totalExercises = 0, activeDays = 0;
+
+    routine.days.forEach((exIds, idx) => {
+      const exercises = (exIds || []).map(id => state.exercises.find(e => e.id === id)).filter(Boolean);
+      totalExercises += exercises.length;
+      if (exercises.length > 0) activeDays++;
+
+      const innerHtml = exercises.length > 0
+        ? exercises.slice(0,3).map(ex => `
+            <div class="mini-ex">
+              <img src="${ex.image}" alt="${ex.name}" onerror="this.src='https://placehold.co/32x32/1e1e1e/888?text=?'">
+              <span>${ex.name}</span>
+            </div>
+          `).join('') + (exercises.length > 3 ? `<p style="font-size:0.72rem;color:var(--text-secondary);padding:4px 0">+${exercises.length-3} más</p>` : '')
+        : `<div class="rest-day"><i class="fas fa-moon"></i>Descanso</div>`;
+
+      const fill = exercises.length > 0 ? Math.min(100, exercises.length * 16) : 0;
+
+      grid.append(`
+        <div class="day-card flex flex-col">
+          <div class="day-header">
+            <span class="day-name">${DAYS_ES[idx]}</span>
+            <span class="day-badge">${exercises.length} ej.</span>
           </div>
-        </div>
-      </nav>
-    </aside>
-    
-    <!-- Overlay for mobile sidebar -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden md:hidden"></div>
-
-    <!-- Main Content -->
-    <main class="flex-1 p-4 md:p-6 overflow-y-auto w-full">
-      
-      <!-- Routines View -->
-      <section id="routines-view" class="animate__animated animate__fadeIn">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
-            <h2 class="text-2xl font-bold text-main">Plan semanal</h2>
-            <p class="text-muted text-sm">Organiza tus rutinas semanales</p>
+          <div class="flex-1 p-3 space-y-2">
+            ${innerHtml}
           </div>
-          <button id="create-routine-btn" class="btn-primary px-4 py-2 rounded-lg shadow-md w-full sm:w-auto">
-            <i class="fas fa-plus mr-2"></i> Nueva rutina
-          </button>
-        </div>
-
-        <!-- Calendar Grid -->
-        <div id="calendar-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- Empty State -->
-        <div id="routines-empty-state" class="hidden text-center py-16">
-          <div class="bg-card border border-dashed border-theme rounded-lg p-8 max-w-md mx-auto">
-            <i class="fas fa-calendar-plus text-5xl text-indigo-400 mb-4 opacity-50"></i>
-            <h3 class="text-xl font-bold text-main mb-2">No activar rutinas</h3>
-            <p class="text-muted mb-6 text-sm">Empieza a crear tus rutinas</p>
-            <button id="create-routine-empty" class="btn-primary px-6 py-2 rounded-lg">
-              Crear primera rutina
+          <div class="px-3 pb-1">
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${fill}%"></div></div>
+          </div>
+          <div class="p-3 pt-2">
+            <button class="edit-day-btn" data-routine="0" data-day="${idx}">
+              <i class="fas fa-pen"></i> Editar día
             </button>
           </div>
         </div>
-      </section>
+      `);
+    });
 
-      <!-- Exercises View -->
-      <section id="exercises-view" class="hidden animate__animated animate__fadeIn">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
-            <h2 class="text-2xl font-bold text-main">Libreria de ejercicios</h2>
-            <p class="text-muted text-sm">Administra tu base de datos de ejercicios</p>
-          </div>
-          <button id="add-exercise-btn" class="btn-primary px-4 py-2 rounded-lg shadow-md w-full sm:w-auto">
-            <i class="fas fa-plus mr-2"></i> Añadir ejercicio
-          </button>
-        </div>
+    // Stats
+    $('#stat-days').text(activeDays);
+    $('#stat-exercises').text(totalExercises);
+    $('#stat-rest').text(7 - activeDays);
+    $('#stats-row').removeClass('hidden');
+  }
 
-        <div class="bg-card rounded-lg mb-6 p-4 border border-theme">
-          <div class="relative">
-            <input type="text" id="exercise-search" placeholder="Search library..." class="w-full bg-input border border-theme rounded-lg py-2 pl-10 pr-4 text-main focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500">
-            <i class="fas fa-search absolute left-3 top-3 text-muted"></i>
-          </div>
-        </div>
+  // ─── RENDER EXERCISES ─────────────────────────────────────
+  function renderExercises(filter) {
+    filter = filter || state.activeFilter;
+    const search = $('#exercise-search').val().toLowerCase();
+    const grid = $('#exercises-grid');
+    grid.empty();
 
-        <div id="exercises-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <!-- Populated by JS -->
-        </div>
+    let list = state.exercises;
+    if (filter !== 'all') list = list.filter(e => e.muscle === filter);
+    if (search) list = list.filter(e => e.name.toLowerCase().includes(search));
 
-        <div id="exercises-empty-state" class="hidden text-center py-16">
-          <div class="bg-card border border-dashed border-theme rounded-lg p-8 max-w-md mx-auto">
-            <i class="fas fa-dumbbell text-5xl text-indigo-400 mb-4 opacity-50"></i>
-            <h3 class="text-xl font-bold text-main mb-2">Libreria de ejercicios</h3>
-            <p class="text-muted mb-6 text-sm">Agrega tu primer ejercicio para comenzar.</p>
-            <button id="add-exercise-empty" class="btn-primary px-6 py-2 rounded-lg">
-              Añadir ejercicio
-            </button>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+    if (list.length === 0) {
+      $('#exercises-empty-state').removeClass('hidden');
+      return;
+    }
+    $('#exercises-empty-state').addClass('hidden');
 
-  <!-- Modals Container -->
-  <div id="modals-container">
-    
-    <!-- Create Routine Modal -->
-    <div id="modal-create-routine" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center hidden p-4">
-      <div class="bg-card rounded-xl shadow-2xl max-w-md w-full animate__animated animate__zoomIn border border-theme" role="dialog">
-        <div class="p-6 border-b border-theme">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xl font-bold text-main">Crear rutina</h3>
-            <button class="modal-close text-muted hover:text-main text-xl"><i class="fas fa-times"></i></button>
-          </div>
-        </div>
-        <div class="p-6">
-          <label class="block text-muted text-sm mb-2">Dias por semana</label>
-          <div class="grid grid-cols-7 gap-2 mb-4" id="days-count-selector">
-            <!-- Generated by JS -->
-          </div>
-          
-          <div id="specific-days-selector" class="hidden">
-            <label class="block text-muted text-sm mb-2 mt-4">Selecciona dias especificos</label>
-            <div class="grid grid-cols-7 gap-2" id="days-toggles">
-               <!-- Generated by JS -->
+    list.forEach(ex => {
+      grid.append(`
+        <div class="ex-card">
+          <div class="img-wrap">
+            <img src="${ex.image}" alt="${ex.name}" onerror="this.src='https://placehold.co/300x150/1e1e1e/888?text=${encodeURIComponent(ex.name)}'">
+            <div class="overlay">
+              <button class="delete-exercise-btn" data-id="${ex.id}"><i class="fas fa-trash-alt"></i></button>
             </div>
           </div>
-        </div>
-        <div class="p-6 border-t border-theme flex justify-end space-x-3 bg-input rounded-b-xl">
-          <button class="modal-close px-4 py-2 border border-theme text-muted rounded-lg hover:bg-card">Cancelar</button>
-          <button id="confirm-create-routine" class="btn-primary px-4 py-2 rounded-lg">Crear</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Edit Day Modal -->
-    <div id="modal-edit-day" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center hidden p-4">
-      <div class="bg-card rounded-xl shadow-2xl max-w-lg w-full animate__animated animate__zoomIn border border-theme" role="dialog">
-        <div class="p-6 border-b border-theme">
-          <div class="flex justify-between items-center">
-            <h3 id="modal-day-title" class="text-xl font-bold text-main">Trabajo diario</h3>
-            <button class="modal-close text-muted hover:text-main text-xl"><i class="fas fa-times"></i></button>
+          <div class="p-3">
+            <p style="font-weight:600;font-size:0.85rem;margin-bottom:4px">${ex.name}</p>
+            <span class="muscle-tag">${ex.muscle || 'Otro'}</span>
           </div>
         </div>
-        <div class="p-6">
-          <div id="day-exercise-list" class="space-y-2 min-h-[100px]">
-             <!-- Populated by JS -->
+      `);
+    });
+  }
+
+  // ─── SELECTORS ────────────────────────────────────────────
+  function buildSelectors() {
+    const cc = $('#days-count-selector');
+    for (let i=1;i<=7;i++) {
+      cc.append(`<button class="day-count-btn${i===state.selectedDaysCount?' selected':''}" data-count="${i}">${i}</button>`);
+    }
+
+    const daysShort = ['D','L','M','X','J','V','S'];
+    const dc = $('#days-toggles');
+    daysShort.forEach((d,i) => {
+      dc.append(`<button class="day-toggle-btn" data-index="${i}">${d}</button>`);
+    });
+  }
+
+  // ─── MODAL HELPERS ───────────────────────────────────────
+  function openModal(id) { $(`#${id}`).addClass('show'); }
+  function closeModal(id) { $(`#${id}`).removeClass('show'); }
+  function closeAll() { $('.modal-backdrop').removeClass('show'); }
+
+  // ─── DAY MODAL ───────────────────────────────────────────
+  function renderDayModal(dayIdx) {
+    $('#modal-day-title').text(DAYS_ES[dayIdx]);
+    const routine = state.routines[state.currentEditingDay.routineIdx];
+    const exIds = routine.days[dayIdx] || [];
+    const list = $('#day-exercise-list');
+    list.empty();
+
+    if (exIds.length === 0) {
+      list.append(`<p style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:20px 0">Sin ejercicios. Añade uno abajo.</p>`);
+    }
+
+    exIds.forEach(id => {
+      const ex = state.exercises.find(e => e.id === id);
+      if (!ex) return;
+      list.append(`
+        <div class="exercise-drag-item" data-id="${ex.id}">
+          <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
+          <img src="${ex.image}" alt="${ex.name}" onerror="this.src='https://placehold.co/44x44/1e1e1e/888?text=?'">
+          <div style="flex:1;min-width:0">
+            <p style="font-weight:600;font-size:0.85rem">${ex.name}</p>
+            <p style="color:var(--text-secondary);font-size:0.72rem">${ex.muscle || ''}</p>
           </div>
-          
-          <div class="mt-4">
-             <button id="add-exercise-to-day" class="w-full py-3 border border-dashed border-theme text-muted rounded-lg hover:border-indigo-500 hover:text-indigo-500 flex items-center justify-center transition-colors">
-                <i class="fas fa-plus mr-2"></i> Añadir ejercicio a este día
-             </button>
-          </div>
+          <button class="remove-day-ex-btn" data-id="${ex.id}" style="background:none;border:none;color:var(--red);cursor:pointer;padding:6px;font-size:0.9rem;opacity:0.7;transition:opacity 0.15s"
+            onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7"><i class="fas fa-trash-alt"></i></button>
         </div>
-        <div class="p-4 border-t border-theme flex justify-end bg-input rounded-b-xl">
-          <button class="modal-close btn-primary px-4 py-2 rounded-lg">Hecho</button>
-        </div>
-      </div>
-    </div>
+      `);
+    });
 
-    <!-- Add Exercise Form Modal -->
-    <div id="modal-add-exercise" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center hidden p-4">
-      <div class="bg-card rounded-xl shadow-2xl max-w-md w-full animate__animated animate__zoomIn border border-theme" role="dialog">
-        <div class="p-6 border-b border-theme">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xl font-bold text-main">Nuevo ejercicio</h3>
-            <button class="modal-close text-muted hover:text-main text-xl"><i class="fas fa-times"></i></button>
-          </div>
-        </div>
-        <form id="exercise-form" class="p-6 space-y-4">
-          <div>
-            <label class="block text-muted text-sm mb-2">Nombre</label>
-            <input type="text" id="input-exercise-name" required class="w-full bg-input border border-theme rounded-lg py-2 px-3 text-main focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Bench Press">
-          </div>
-          <div>
-            <label class="block text-muted text-sm mb-2">Imagen URL</label>
-            <input type="text" id="input-exercise-image" class="w-full bg-input border border-theme rounded-lg py-2 px-3 text-main focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="https://...">
-          </div>
-        </form>
-        <div class="p-6 border-t border-theme flex justify-end space-x-3 bg-input rounded-b-xl">
-          <button class="modal-close px-4 py-2 border border-theme text-muted rounded-lg hover:bg-card">Cancelar</button>
-          <button id="save-exercise" class="btn-primary px-4 py-2 rounded-lg">Guardar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Select Exercise Modal -->
-    <div id="modal-select-exercise" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center hidden p-4">
-      <div class="bg-card rounded-xl shadow-2xl max-w-md w-full animate__animated animate__zoomIn border border-theme" role="dialog">
-        <div class="p-6 border-b border-theme">
-          <input type="text" id="search-exercise-modal" placeholder="Buscar ejercicios..." class="w-full bg-input border border-theme rounded-lg py-2 px-4 text-main focus:ring-2 focus:ring-indigo-500 outline-none">
-        </div>
-        <div id="exercise-selector-list" class="p-6 space-y-2 max-h-[400px] overflow-y-auto">
-          <!-- Populated by JS -->
-        </div>
-        <div class="p-4 border-t border-theme flex justify-end bg-input rounded-b-xl">
-          <button class="modal-close px-4 py-2 border border-theme text-muted rounded-lg hover:bg-card">Cancelar</button>
-          <button id="confirm-add-exercises" class="btn-primary px-4 py-2 rounded-lg">Añadir seleccionados</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    $(document).ready(function() {
-      // --- State Management ---
-      const state = {
-        currentView: 'routines',
-        theme: localStorage.getItem('theme') || 'dark',
-        routines: JSON.parse(localStorage.getItem('fitRoutines')) || [],
-        exercises: JSON.parse(localStorage.getItem('fitExercises')) || getDefaultExercises(),
-        selectedDaysCount: 3,
-        selectedSpecificDays: [],
-        currentEditingDay: null, // { routineIndex, dayIndex }
-        selectedExercisesToAdd: []
-      };
-
-      // --- Initial Setup ---
-      initApp();
-
-      function initApp() {
-        applyTheme(state.theme);
-        renderAll();
-        initSelectors();
-        attachEventListeners();
-      }
-
-      // --- Data Handling ---
-      function saveData() {
-        localStorage.setItem('fitRoutines', JSON.stringify(state.routines));
-        localStorage.setItem('fitExercises', JSON.stringify(state.exercises));
-        localStorage.setItem('theme', state.theme);
-      }
-
-      function getDefaultExercises() {
-        return [
-          { id: 'ex1', name: 'Bench Press', image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=300&q=80' },
-          { id: 'ex2', name: 'Squats', image: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=300&q=80' },
-          { id: 'ex3', name: 'Pull Ups', image: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=300&q=80' },
-          { id: 'ex4', name: 'Deadlift', image: 'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?auto=format&fit=crop&w=300&q=80' }
-        ];
-      }
-
-      // --- Rendering ---
-      function renderAll() {
-        renderRoutines();
-        renderExercises();
-        checkEmptyStates();
-      }
-
-      function renderRoutines() {
-        const container = $('#calendar-grid');
-        container.empty();
-        
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        // Take the first routine for simplicity, could be expanded for multiple routines
-        const routine = state.routines[0]; 
-        
-        if (!routine) return;
-
-        routine.days.forEach((exercisesIds, index) => {
-          const exercises = exercisesIds.map(id => state.exercises.find(e => e.id === id)).filter(Boolean);
-          const card = `
-            <div class="card p-4 flex flex-col">
-              <div class="flex justify-between items-center mb-3 pb-2 border-b border-theme">
-                <h3 class="font-bold text-lg text-main">${days[index]}</h3>
-                <span class="text-xs bg-indigo-500 text-white px-2 py-1 rounded-full">${exercises.length} ex.</span>
-              </div>
-              <div class="flex-grow space-y-2 mb-3">
-                ${exercises.length > 0 ? exercises.map(ex => `
-                  <div class="flex items-center gap-2 p-2 bg-input rounded-md">
-                    <img src="${ex.image}" class="w-8 h-8 rounded object-cover">
-                    <span class="text-sm text-main truncate">${ex.name}</span>
-                  </div>
-                `).join('') : `
-                  <div class="text-center text-muted text-sm py-4">
-                    Rest Day
-                  </div>
-                `}
-              </div>
-              <button class="edit-day-btn w-full mt-auto py-2 text-sm text-indigo-400 hover:bg-indigo-500 hover:text-white rounded-md transition-colors border border-indigo-500" data-routine="0" data-day="${index}">
-                <i class="fas fa-edit mr-1"></i> Edit
-              </button>
-            </div>
-          `;
-          container.append(card);
-        });
-      }
-
-      function renderExercises() {
-        const container = $('#exercises-grid');
-        container.empty();
-
-        state.exercises.forEach(ex => {
-          const card = `
-            <div class="card overflow-hidden group">
-              <div class="relative h-40">
-                <img src="${ex.image}" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <button class="delete-exercise-btn bg-red-500 p-2 rounded-full text-white hover:bg-red-600 transition-transform transform scale-0 group-hover:scale-100" data-id="${ex.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-              </div>
-              <div class="p-3">
-                <h4 class="font-semibold text-main">${ex.name}</h4>
-              </div>
-            </div>
-          `;
-          container.append(card);
-        });
-      }
-
-      function checkEmptyStates() {
-        $('#routines-empty-state').toggleClass('hidden', state.routines.length > 0);
-        $('#calendar-grid').toggleClass('hidden', state.routines.length === 0);
-        $('#exercises-empty-state').toggleClass('hidden', state.exercises.length > 0);
-        $('#exercises-grid').toggleClass('hidden', state.exercises.length === 0);
-      }
-
-      // --- UI Logic ---
-      
-      function initSelectors() {
-        // Init Days Count Selector
-        const countContainer = $('#days-count-selector');
-        for(let i=1; i<=7; i++) {
-          const activeClass = i === state.selectedDaysCount ? 'bg-indigo-600 text-white border-indigo-600' : 'text-muted';
-          countContainer.append(`<button class="day-count-btn border border-theme py-2 rounded-md ${activeClass}" data-count="${i}">${i}</button>`);
-        }
-
-        // Init Specific Days Selector
-        const daysShort = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-        const togglesContainer = $('#days-toggles');
-        daysShort.forEach((name, idx) => {
-           togglesContainer.append(`<button class="day-toggle-btn border border-theme py-2 rounded-md text-muted" data-index="${idx}">${name}</button>`);
-        });
-      }
-
-      function applyTheme(theme) {
-        if (theme === 'light') {
-          $('body').addClass('light-mode');
-          $('#theme-icon-light').removeClass('hidden');
-          $('#theme-icon-dark').addClass('hidden');
-        } else {
-          $('body').removeClass('light-mode');
-          $('#theme-icon-light').addClass('hidden');
-          $('#theme-icon-dark').removeClass('hidden');
-        }
-      }
-
-      function openModal(id) {
-        $(`#${id}`).removeClass('hidden');
-      }
-
-      function closeModal(id) {
-        $(`#${id}`).addClass('hidden');
-      }
-
-      function closeAllModals() {
-        $('.modal-backdrop').addClass('hidden');
-        state.selectedExercisesToAdd = [];
-      }
-
-      // --- Event Listeners (Delegated) ---
-      
-      function attachEventListeners() {
-        
-        // Navigation
-        $('.nav-link').on('click', function(e) {
-          e.preventDefault();
-          const view = $(this).data('view');
-          $('.nav-link').removeClass('active bg-indigo-600 text-white').addClass('text-muted');
-          $(this).addClass('active bg-indigo-600 text-white').removeClass('text-muted');
-          
-          $('section[id$="-view"]').addClass('hidden');
-          $(`#${view}-view`).removeClass('hidden');
-        });
-
-        // Mobile Sidebar
-        $('#sidebar-toggle, #sidebar-overlay').on('click', function() {
-          $('#sidebar').toggleClass('-translate-x-full');
-          $('#sidebar-overlay').toggleClass('hidden');
-        });
-
-        // Theme Toggle
-        $('#theme-toggle').on('click', function() {
-          state.theme = state.theme === 'dark' ? 'light' : 'dark';
-          applyTheme(state.theme);
-          saveData();
-        });
-
-        // Modals General
-        $(document).on('click', '.modal-close', closeAllModals);
-        $(document).on('click', '.modal-backdrop', function(e) {
-          if ($(e.target).hasClass('modal-backdrop')) closeAllModals();
-        });
-
-        // --- Routine Logic ---
-        
-        $('#create-routine-btn, #create-routine-empty').on('click', () => openModal('modal-create-routine'));
-
-        $(document).on('click', '.day-count-btn', function() {
-          const count = $(this).data('count');
-          state.selectedDaysCount = count;
-          $('.day-count-btn').removeClass('bg-indigo-600 text-white border-indigo-600').addClass('text-muted');
-          $(this).addClass('bg-indigo-600 text-white border-indigo-600').removeClass('text-muted');
-          
-          if (count < 7) {
-            $('#specific-days-selector').removeClass('hidden');
-          } else {
-            $('#specific-days-selector').addClass('hidden');
-          }
-        });
-
-        $(document).on('click', '.day-toggle-btn', function() {
-          $(this).toggleClass('bg-indigo-600 text-white border-indigo-600 text-muted');
-        });
-
-        $('#confirm-create-routine').on('click', function() {
-           const selectedDays = [];
-           if (state.selectedDaysCount < 7) {
-             $('.day-toggle-btn.bg-indigo-600').each(function() {
-               selectedDays.push($(this).data('index'));
-             });
-             if (selectedDays.length !== state.selectedDaysCount) {
-               alert(`Please select exactly ${state.selectedDaysCount} days.`);
-               return;
-             }
-           } else {
-             for(let i=0; i<7; i++) selectedDays.push(i);
-           }
-
-           // Create Routine Structure
-           const newRoutine = { id: Date.now(), days: Array(7).fill([]) }; // Initialize all days as empty
-           selectedDays.forEach(idx => newRoutine.days[idx] = []); // Explicit empty array for active days
-           
-           // If replacing, simply overwrite index 0 or push
-           if(state.routines.length > 0) state.routines[0] = newRoutine;
-           else state.routines.push(newRoutine);
-
-           saveData();
-           renderAll();
-           closeAllModals();
-        });
-
-        // Edit Day
-        $(document).on('click', '.edit-day-btn', function() {
-          const routineIdx = $(this).data('routine');
-          const dayIdx = $(this).data('day');
-          state.currentEditingDay = { routineIdx, dayIdx };
-          renderDayModal(dayIdx);
-          openModal('modal-edit-day');
-        });
-
-        function renderDayModal(dayIdx) {
-          const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          $('#modal-day-title').text(days[dayIdx] + ' Workout');
-          
-          const routine = state.routines[state.currentEditingDay.routineIdx];
-          const exercisesIds = routine.days[dayIdx] || [];
-          
-          const list = $('#day-exercise-list');
-          list.empty();
-
-          exercisesIds.forEach((id, index) => {
-            const ex = state.exercises.find(e => e.id === id);
-            if(!ex) return;
-            list.append(`
-              <div class="exercise-item flex items-center gap-3 p-2 rounded-lg cursor-move" data-id="${ex.id}">
-                <span class="text-muted cursor-grab"><i class="fas fa-grip-vertical"></i></span>
-                <img src="${ex.image}" class="w-12 h-12 rounded object-cover">
-                <div class="flex-1">
-                   <p class="text-main font-medium">${ex.name}</p>
-                   <p class="text-muted text-xs">Drag to reorder</p>
-                </div>
-                <button class="remove-day-ex-btn text-red-400 hover:text-red-600 p-2"><i class="fas fa-trash"></i></button>
-              </div>
-            `);
-          });
-
-          // Init Sortable
-          list.sortable({
-            handle: '.cursor-grab',
-            placeholder: 'sortable-placeholder',
-            update: function(event, ui) {
-              const newOrder = [];
-              $('#day-exercise-list .exercise-item').each(function() {
-                newOrder.push($(this).data('id'));
-              });
-              state.routines[state.currentEditingDay.routineIdx].days[dayIdx] = newOrder;
-              saveData();
-            }
-          });
-        }
-
-        $(document).on('click', '.remove-day-ex-btn', function() {
-          const item = $(this).closest('.exercise-item');
-          const id = item.data('id');
-          const { routineIdx, dayIdx } = state.currentEditingDay;
-          
-          // Remove from state
-          const list = state.routines[routineIdx].days[dayIdx];
-          const index = list.indexOf(id);
-          if (index > -1) list.splice(index, 1);
-          
-          saveData();
-          item.fadeOut(200, function() { $(this).remove(); });
-          renderRoutines(); // Update main view as well
-        });
-
-        $('#add-exercise-to-day').on('click', function() {
-          renderExerciseSelector();
-          openModal('modal-select-exercise');
-        });
-
-        // --- Exercise Logic ---
-        
-        $('#add-exercise-btn, #add-exercise-empty').on('click', () => {
-          $('#input-exercise-name').val('');
-          $('#input-exercise-image').val('');
-          openModal('modal-add-exercise');
-        });
-
-        $('#save-exercise').on('click', function() {
-          const name = $('#input-exercise-name').val().trim();
-          const img = $('#input-exercise-image').val().trim() || 'https://via.placeholder.com/300';
-          
-          if(!name) return;
-
-          state.exercises.push({ id: 'ex_' + Date.now(), name, image: img });
-          saveData();
-          renderExercises();
-          checkEmptyStates();
-          closeAllModals();
-        });
-
-        $(document).on('click', '.delete-exercise-btn', function() {
-          if(!confirm('Delete this exercise?')) return;
-          const id = $(this).data('id');
-          state.exercises = state.exercises.filter(e => e.id !== id);
-          
-          // Remove from routines
-          state.routines.forEach(r => {
-            r.days = r.days.map(d => d.filter(exId => exId !== id));
-          });
-
-          saveData();
-          renderAll();
-        });
-
-        // Search in Main View
-        $('#exercise-search').on('input', function() {
-           const term = $(this).val().toLowerCase();
-           $('#exercises-grid .card').each(function() {
-              const name = $(this).find('h4').text().toLowerCase();
-              $(this).toggle(name.includes(term));
-           });
-        });
-
-        // Exercise Selector
-        function renderExerciseSelector() {
-          const list = $('#exercise-selector-list');
-          list.empty();
-          state.selectedExercisesToAdd = [];
-          
-          state.exercises.forEach(ex => {
-            list.append(`
-              <label class="flex items-center gap-3 p-2 hover:bg-input rounded-lg cursor-pointer transition-colors">
-                <input type="checkbox" class="ex-select-checkbox hidden" value="${ex.id}">
-                <div class="w-5 h-5 border-2 border-theme rounded flex items-center justify-center checkbox-visual">
-                   <i class="fas fa-check text-white text-xs hidden"></i>
-                </div>
-                <img src="${ex.image}" class="w-10 h-10 rounded object-cover">
-                <span class="text-main">${ex.name}</span>
-              </label>
-            `);
-          });
-        }
-
-        $(document).on('change', '.ex-select-checkbox', function() {
-           const visual = $(this).siblings('.checkbox-visual');
-           const icon = visual.find('i');
-           if(this.checked) {
-             visual.addClass('bg-indigo-600 border-indigo-600');
-             icon.removeClass('hidden');
-           } else {
-             visual.removeClass('bg-indigo-600 border-indigo-600');
-             icon.addClass('hidden');
-           }
-        });
-
-        $('#search-exercise-modal').on('input', function() {
-           const term = $(this).val().toLowerCase();
-           $('#exercise-selector-list label').each(function() {
-              const name = $(this).find('span').text().toLowerCase();
-              $(this).toggle(name.includes(term));
-           });
-        });
-
-        $('#confirm-add-exercises').on('click', function() {
-           const selected = [];
-           $('.ex-select-checkbox:checked').each(function() {
-             selected.push($(this).val());
-           });
-
-           if(selected.length > 0 && state.currentEditingDay) {
-             const { routineIdx, dayIdx } = state.currentEditingDay;
-             state.routines[routineIdx].days[dayIdx].push(...selected);
-             saveData();
-             renderDayModal(dayIdx); // Re-render inner list
-             renderRoutines(); // Update background
-           }
-           closeAllModals();
-        });
-
+    list.sortable({
+      handle: '.drag-handle',
+      placeholder: 'sortable-placeholder',
+      update: function() {
+        const order = [];
+        $('#day-exercise-list .exercise-drag-item').each(function() { order.push($(this).data('id')); });
+        state.routines[state.currentEditingDay.routineIdx].days[dayIdx] = order;
+        save();
       }
     });
-  </script>
+  }
+
+  // ─── EXERCISE SELECTOR ───────────────────────────────────
+  function renderExSelector() {
+    const list = $('#exercise-selector-list');
+    list.empty();
+    state.exercises.forEach(ex => {
+      list.append(`
+        <label class="ex-select-label" data-id="${ex.id}">
+          <div class="checkbox-vis"><i class="fas fa-check"></i></div>
+          <img src="${ex.image}" alt="${ex.name}" onerror="this.src='https://placehold.co/40x40/1e1e1e/888?text=?'">
+          <div>
+            <p style="font-weight:600;font-size:0.85rem">${ex.name}</p>
+            <p style="color:var(--text-secondary);font-size:0.72rem">${ex.muscle||''}</p>
+          </div>
+        </label>
+      `);
+    });
+  }
+
+  // ─── EVENT LISTENERS ─────────────────────────────────────
+  function attachListeners() {
+
+    // Nav
+    $(document).on('click', '.nav-link', function(e) {
+      e.preventDefault();
+      const view = $(this).data('view');
+      $('.nav-link').removeClass('active');
+      $(this).addClass('active');
+      $('section[id$="-view"]').addClass('hidden');
+      $(`#${view}-view`).removeClass('hidden');
+    });
+
+    // Mobile sidebar
+    $('#sidebar-toggle').on('click', function() {
+      $('#sidebar').toggleClass('open');
+      $('#sidebar-overlay').toggleClass('hidden');
+    });
+    $('#sidebar-overlay').on('click', function() {
+      $('#sidebar').removeClass('open');
+      $(this).addClass('hidden');
+    });
+
+    // Theme
+    $('#theme-toggle').on('click', function() {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(state.theme);
+      save();
+    });
+
+    // Modal close
+    $(document).on('click', '.modal-close', closeAll);
+    $(document).on('click', '.modal-backdrop', function(e) {
+      if ($(e.target).hasClass('modal-backdrop')) closeAll();
+    });
+
+    // CREATE ROUTINE
+    $('#create-routine-btn, #create-routine-empty').on('click', function() {
+      // Reset selector
+      $('.day-count-btn').removeClass('selected');
+      $(`.day-count-btn[data-count="${state.selectedDaysCount}"]`).addClass('selected');
+      $('.day-toggle-btn').removeClass('selected');
+      if (state.selectedDaysCount < 7) $('#specific-days-selector').removeClass('hidden');
+      else $('#specific-days-selector').addClass('hidden');
+      openModal('modal-create-routine');
+    });
+
+    $(document).on('click', '.day-count-btn', function() {
+      const count = $(this).data('count');
+      state.selectedDaysCount = count;
+      $('.day-count-btn').removeClass('selected');
+      $(this).addClass('selected');
+      if (count < 7) $('#specific-days-selector').removeClass('hidden');
+      else $('#specific-days-selector').addClass('hidden');
+    });
+
+    $(document).on('click', '.day-toggle-btn', function() {
+      $(this).toggleClass('selected');
+    });
+
+    $('#confirm-create-routine').on('click', function() {
+      const selected = [];
+      if (state.selectedDaysCount < 7) {
+        $('.day-toggle-btn.selected').each(function() { selected.push($(this).data('index')); });
+        if (selected.length !== state.selectedDaysCount) {
+          alert(`Por favor selecciona exactamente ${state.selectedDaysCount} día(s).`);
+          return;
+        }
+      } else {
+        for(let i=0;i<7;i++) selected.push(i);
+      }
+
+      const newRoutine = { id: Date.now(), days: Array(7).fill(null).map(()=>[]) };
+      const newR = { id: Date.now(), days: Array(7).fill(null).map(()=>[]) };
+      selected.forEach(idx => newR.days[idx] = []);
+
+      if (state.routines.length > 0) state.routines[0] = newR;
+      else state.routines.push(newR);
+      save();
+      renderAll();
+      closeAll();
+    });
+
+    // EDIT DAY
+    $(document).on('click', '.edit-day-btn', function() {
+      const ri = $(this).data('routine');
+      const di = $(this).data('day');
+      state.currentEditingDay = { routineIdx: ri, dayIdx: di };
+      renderDayModal(di);
+      openModal('modal-edit-day');
+    });
+
+    $(document).on('click', '.remove-day-ex-btn', function() {
+      const id = $(this).data('id');
+      const { routineIdx, dayIdx } = state.currentEditingDay;
+      const d = state.routines[routineIdx].days[dayIdx];
+      const i = d.indexOf(id);
+      if (i > -1) d.splice(i,1);
+      save();
+      renderDayModal(dayIdx);
+      renderRoutines();
+    });
+
+    $('#add-exercise-to-day').on('click', function() {
+      renderExSelector();
+      openModal('modal-select-exercise');
+    });
+
+    // SAVE EXERCISE
+    $('#add-exercise-btn, #add-exercise-empty').on('click', function() {
+      $('#input-exercise-name').val('');
+      $('#input-exercise-image').val('');
+      openModal('modal-add-exercise');
+    });
+
+    $('#save-exercise').on('click', function() {
+      const name = $('#input-exercise-name').val().trim();
+      const muscle = $('#input-exercise-muscle').val();
+      const img = $('#input-exercise-image').val().trim() || `https://placehold.co/300x200/1e1e1e/e8ff00?text=${encodeURIComponent(name)}`;
+      if (!name) { $('#input-exercise-name').focus(); return; }
+      state.exercises.push({ id:'ex_'+Date.now(), name, muscle, image: img });
+      save();
+      renderExercises();
+      closeAll();
+    });
+
+    // DELETE EXERCISE
+    $(document).on('click', '.delete-exercise-btn', function(e) {
+      e.stopPropagation();
+      if (!confirm('¿Eliminar este ejercicio?')) return;
+      const id = $(this).data('id');
+      state.exercises = state.exercises.filter(e => e.id !== id);
+      state.routines.forEach(r => { r.days = r.days.map(d => d.filter(x => x !== id)); });
+      save();
+      renderAll();
+    });
+
+    // SEARCH
+    $('#exercise-search').on('input', function() {
+      renderExercises(state.activeFilter);
+    });
+
+    // FILTER CHIPS
+    $(document).on('click', '.filter-chip', function() {
+      $('.filter-chip').removeClass('active');
+      $(this).addClass('active');
+      state.activeFilter = $(this).data('muscle');
+      renderExercises(state.activeFilter);
+    });
+
+    // MODAL SEARCH
+    $('#search-exercise-modal').on('input', function() {
+      const term = $(this).val().toLowerCase();
+      $('#exercise-selector-list .ex-select-label').each(function() {
+        const name = $(this).find('p').first().text().toLowerCase();
+        $(this).toggle(name.includes(term));
+      });
+    });
+
+    // SELECT EXERCISE CHECK
+    $(document).on('click', '.ex-select-label', function() {
+      $(this).toggleClass('checked');
+    });
+
+    // CONFIRM ADD EXERCISES
+    $('#confirm-add-exercises').on('click', function() {
+      const selected = [];
+      $('.ex-select-label.checked').each(function() { selected.push($(this).data('id')); });
+      if (selected.length > 0 && state.currentEditingDay) {
+        const { routineIdx, dayIdx } = state.currentEditingDay;
+        // Avoid duplicates
+        selected.forEach(id => {
+          if (!state.routines[routineIdx].days[dayIdx].includes(id)) {
+            state.routines[routineIdx].days[dayIdx].push(id);
+          }
+        });
+        save();
+        renderDayModal(dayIdx);
+        renderRoutines();
+      }
+      closeAll();
+    });
+
+  }
+
+});
+</script>
 </body>
 </html>
